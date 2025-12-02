@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "479627633708",
+    "project_id": "stylecutz-app",
+    "storage_bucket": "stylecutz-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:479627633708:android:ae7035bacc82c2193c1d89",
+        "android_client_info": {
+          "package_name": "com.example.barber_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "479627633708-7dm7eqrb0kpj9efo55aksqbdghtn0q3j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.barber_app",
+            "certificate_hash": "8ef16c935c874cecd77c324de4dcaee6d89d2817"
+          }
+        },
+        {
+          "client_id": "479627633708-b2v9cao1ksbhqvnssb6d5u9ehbnbmvos.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.barber_app",
+            "certificate_hash": "22ef0e7bc1869e4b9eccd595a62ec8bae93f95f2"
+          }
+        },
+        {
+          "client_id": "479627633708-g2hsg8r0rba51o6k8v3arbhfunhj09oq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBa_G6Fzg0TmJE6vRPVJtQQ2CF1PGQg1oU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "479627633708-g2hsg8r0rba51o6k8v3arbhfunhj09oq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "479627633708-hoflgppogekbbq3mq1pinkmtrqdoffk3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.barberApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
