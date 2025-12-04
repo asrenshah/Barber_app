@@ -5,11 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart';
-import '../auth/profile_selector.dart'; // 🆕 TAMBAH IMPORT INI
-import '../auth/login/login_screen.dart';
+import '../auth/profile_selector.dart';
 import 'customer_app.dart';
-import '../shared/universal_profile_form.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
@@ -24,7 +21,6 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   
   Map<String, dynamic> _userData = {};
   bool _loading = true;
-  bool _editing = false;
   bool _uploadingImage = false;
 
   final TextEditingController _nameController = TextEditingController();
@@ -38,8 +34,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     _loadUserData();
   }
 
-  // ✅ FIXED: Back to Feed function (SUDAH BETUL)
-  void _goBackToFeed() {
+ void _goBackToFeed() {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const CustomerApp()),
       (route) => false,
@@ -129,8 +124,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      setState(() {
-        _editing = false;
+     setState(() {
         _userData = {
           ..._userData,
           'name': _nameController.text.trim(),
@@ -152,7 +146,6 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     }
   }
 
-  // ✅ FIXED: LOGOUT FUNCTION - REDIRECT KE PROFILE SELECTOR
   Future<void> _logout() async {
     showDialog(
       context: context,
@@ -166,10 +159,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Close dialog
+              Navigator.pop(context);
               await FirebaseAuth.instance.signOut();
               
-              // ✅ FIXED: CLEAR NAVIGATION STACK & REDIRECT KE PROFILE SELECTOR
               if (mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const ProfileSelector()),
@@ -308,15 +300,50 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           child: Column(
             children: [
               _buildProfileHeader(),
-              // ... (KEEP ALL YOUR EXISTING UI COMPONENTS)
               
-              // ✅ FIXED: Logout button dengan function yang betul
+              // Profile Information Section
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Add your profile information fields here
+                    // Example:
+                    /*
+                    ListTile(
+                      leading: Icon(Icons.person),
+                      title: Text('Name: ${_userData['name'] ?? '-'}'),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.phone),
+                      title: Text('Phone: ${_userData['phone'] ?? '-'}'),
+                    ),
+                    */
+                    
+                    // Edit Profile Button
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // TODO: Implement edit profile functionality
+                          },
+                          child: const Text('Edit Profile'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Logout Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _logout, // ✅ FIXED: NOW PROPERLY REDIRECTS
+                    onPressed: _logout,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,

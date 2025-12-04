@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../owner_dashboard.dart';
-import '../customer_profile_screen.dart';
 
 class RegisterLoginService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -60,17 +58,17 @@ class RegisterLoginService {
       final doc = await _firestore.collection('users').doc(user.uid).get();
       final role = doc.data()?['role'] ?? 'customer';
 
-      // Navigate berdasarkan role
+      // Navigate berdasarkan role - guna temporary screens dulu
       if (role == 'owner') {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const OwnerDashboard()),
+          MaterialPageRoute(builder: (_) => _buildOwnerDashboard()),
           (route) => false,
         );
       } else {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const CustomerProfileScreen()),
+          MaterialPageRoute(builder: (_) => _buildCustomerProfileScreen()),
           (route) => false,
         );
       }
@@ -86,5 +84,55 @@ class RegisterLoginService {
   // 🔹 RESET PASSWORD
   Future<void> sendPasswordReset(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  // Temporary Owner Dashboard Screen
+  Widget _buildOwnerDashboard() {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Owner Dashboard')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Welcome Owner!',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Navigate to actual owner dashboard
+              },
+              child: const Text('Continue to Dashboard'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Temporary Customer Profile Screen
+  Widget _buildCustomerProfileScreen() {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Customer Profile')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Welcome Customer!',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Navigate to actual customer screen
+              },
+              child: const Text('Continue to Profile'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
+import 'screens/auth/splash_screen.dart'; // ✅ TAMBAH INI SAHAJA
 import 'screens/auth/profile_selector.dart';
 import 'screens/owner/owner_app.dart';
 import 'screens/customer/customer_app.dart';
@@ -14,7 +15,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  print('🚀 Apps started - Direct Auth Flow');
+  print('🚀 Apps started - Premium Splash Screen');
   runApp(const MyApp());
 }
 
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
       title: 'StyleCutz',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      home: const AuthWrapper(), // ✅ DIRECT AUTH WRAPPER
+      home: const SplashScreen(), // ✅ UBAH INI SAHAJA: AuthWrapper → SplashScreen
     );
   }
 }

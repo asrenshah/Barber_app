@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login/login_screen.dart';
+import '../auth/login/login_screen.dart'; // ✅ FIXED IMPORT PATH
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -57,8 +57,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
 
+    // ✅ Check jika LoginScreen adalah class atau function
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen(userType: 'customer')),
+      MaterialPageRoute(builder: (_) => LoginScreen(userType: 'customer')), // ✅ Gunakan class LoginScreen
       (route) => false,
     );
   }
@@ -68,7 +69,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return const LoginScreen(userType: 'customer');
+      // ✅ Gunakan class LoginScreen
+      return LoginScreen(userType: 'customer');
     }
 
     return Scaffold(

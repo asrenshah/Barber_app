@@ -1,4 +1,3 @@
-// lib/screens/customer/feed_reels_tab.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:video_player/video_player.dart';
@@ -16,7 +15,6 @@ class _FeedReelsTabState extends State<FeedReelsTab> {
   final PageController _pageController = PageController();
   final Map<String, VideoPlayerController> _videoControllers = {};
   final Map<String, ChewieController> _chewieControllers = {};
-  int _currentPage = 0;
 
   @override
   void dispose() {
@@ -31,9 +29,8 @@ class _FeedReelsTabState extends State<FeedReelsTab> {
   }
 
   void _onPageChanged(int index) {
-    setState(() {
-      _currentPage = index;
-    });
+    // Optional: Jika perlu tracking current page untuk analytics atau lain-lain
+    // print('Current page: $index');
   }
 
   void _likeReel(String reelId, Map<String, dynamic> reel) {
