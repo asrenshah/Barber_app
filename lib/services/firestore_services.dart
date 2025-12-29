@@ -1,5 +1,6 @@
 // lib/services/firestore_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class FirestoreService {
   // Singleton
@@ -9,7 +10,6 @@ class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   /// Simpan user baru (customer atau shop owner)
-  /// Menggunakan SetOptions(merge: true) supaya tidak overwrite data sedia ada.
   Future<void> createUser({
     required String uid,
     required String email,
@@ -31,7 +31,6 @@ class FirestoreService {
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
-      // biarkan caller handle error; rethrow supaya stack trace tidak hilang
       rethrow;
     }
   }
@@ -58,26 +57,45 @@ class FirestoreService {
     }
   }
 
-  /// Simpan booking baru (customer buat appointment)
-  /// NOTE: Simpankan kedua-dua bentuk masa: `time` sebagai Timestamp (untuk query) dan
-  /// `time_iso` sebagai String (untuk backward compatibility).
+  /// 🎯 FIXED: Simpan booking baru - SUPPORT BOTH STRUCTURES
   Future<String> createBooking({
     required String shopId,
     required String customerId,
-    required String service,
+    required String serviceName,
     required DateTime time,
-    String? shopName, // optional convenience field
+    double price = 0.0,
+    String? customerName,
+    String? customerPhone,
+    String? shopName,
+    bool isWalkIn = false,
   }) async {
     try {
       final bookingRef = _db.collection('bookings').doc();
+      
+      // Format date string untuk dashboard service
+      final dateStr = DateFormat('yyyy-MM-dd').format(time);
+      final timeStr = DateFormat('HH:mm').format(time);
+      
       await bookingRef.set({
+        // ✅ NEW STRUCTURE (untuk booking service)
         'shopId': shopId,
         'customerId': customerId,
-        'service': service,
-        'time': Timestamp.fromDate(time), // native timestamp
-        'time_iso': time.toIso8601String(), // legacy-friendly
-        'shopName': shopName,
+        'customerName': customerName ?? 'Customer',
+        'customerPhone': customerPhone,
+        'serviceName': serviceName,
+        'price': price,
+        'startAt': Timestamp.fromDate(time), // Untuk booking service
         'status': 'pending',
+        'isPaid': false,
+        'isWalkIn': isWalkIn,
+        
+        // ✅ OLD STRUCTURE (untuk dashboard service)
+        'date': dateStr,  // Untuk dashboard service
+        'time': timeStr,  // Untuk dashboard service
+        'service': serviceName, // Backup untuk compatibility
+        
+        // Common fields
+        'shopName': shopName,
         'createdAt': FieldValue.serverTimestamp(),
       });
       return bookingRef.id;
@@ -97,11 +115,13 @@ class FirestoreService {
   }
 
   /// Dapatkan semua bookings untuk satu shop (by shopId)
+  /// 🎯 FIXED: Support both query methods
   Stream<QuerySnapshot<Map<String, dynamic>>> getBookingsForShop(String shopId) {
+    // Boleh guna 'date' atau 'startAt' bergantung pada keperluan
     return _db
         .collection('bookings')
         .where('shopId', isEqualTo: shopId)
-        .orderBy('time') // memudahkan ordering (sokong Timestamp)
+        .orderBy('date') // Guna date untuk compatibility
         .snapshots();
   }
 
@@ -111,11 +131,11 @@ class FirestoreService {
     return _db
         .collection('bookings')
         .where('customerId', isEqualTo: customerId)
-        .orderBy('time')
+        .orderBy('date') // Guna date untuk compatibility
         .snapshots();
   }
 
-  /// (Helper) Update status booking
+  /// (Helper) Update status booking - SUPPORT BOTH SERVICES
   Future<void> updateBookingStatus(String bookingId, String status) async {
     try {
       await _db.collection('bookings').doc(bookingId).update({
@@ -132,7 +152,43 @@ class FirestoreService {
     return _db
         .collection('bookings')
         .where('ownerId', isEqualTo: ownerId)
-        .orderBy('time')
+        .orderBy('date')
         .snapshots();
+  }
+  
+  /// 🎯 NEW: Helper untuk migrate data lama ke baru
+  Future<void> migrateOldBookings(String shopId) async {
+    try {
+      final snapshot = await _db
+          .collection('bookings')
+          .where('shopId', isEqualTo: shopId)
+          .get();
+      
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        
+        // Jika ada date & time tapi takda startAt
+        if (data['date'] != null && data['time'] != null && data['startAt'] == null) {
+          final dateStr = data['date'] as String;
+          final timeStr = data['time'] as String;
+          
+          try {
+            // Parse date + time to DateTime
+            final dateTimeStr = '${dateStr}T$timeStr:00';
+            final dateTime = DateTime.parse(dateTimeStr);
+            
+            await doc.reference.update({
+              'startAt': Timestamp.fromDate(dateTime),
+              'serviceName': data['service'] ?? data['serviceName'] ?? 'Service',
+            });
+            print('Migrated booking: ${doc.id}');
+          } catch (e) {
+            print('Failed to migrate booking ${doc.id}: $e');
+          }
+        }
+      }
+    } catch (e) {
+      print('Migration error: $e');
+    }
   }
 }

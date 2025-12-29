@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ✅ TAMBAH IMPORT
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'feed_screen.dart';
-import 'booking_screen.dart';
-import 'customer_profile_screen.dart';
+import 'screens/discover/feed_screen.dart';
+import 'screens/book/booking_screen.dart';
+import 'screens/profile/customer_profile_screen.dart';
 import '../auth/profile_selector.dart';
+import '../shared/exit_confirmation_dialog.dart'; // ✅ TAMBAH IMPORT
 
 class CustomerApp extends StatefulWidget {
   const CustomerApp({super.key});
@@ -151,31 +153,54 @@ class _CustomerAppState extends State<CustomerApp> {
   @override
   Widget build(BuildContext context) {
     // ✅ FIXED: Screens dengan profile tab yang dynamic
-    final List<Widget> _screens = [
+    final List<Widget> screens = [
       const FeedScreen(),
       const BookingScreen(),
-      _buildProfileTab(), // ✅ GANTI: Dynamic profile tab
+      _buildProfileTab(), // ✅ Dynamic profile tab
     ];
 
-    return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Book',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+    return PopScope(
+      canPop: false, // 🚫 BLOCK DEFAULT BACK BEHAVIOR
+      onPopInvoked: (didPop) async {
+        if (didPop) return; // Jika sudah pop, return
+        
+        // 🎯 IMPLEMENTASI PATTERN ANDA:
+        
+        // 1. JIKA BUKAN DI FEED SCREEN (index 0) → BACK TO FEED
+        if (_currentIndex != 0) {
+          print('🔙 Back to Feed Screen (was at index $_currentIndex)');
+          setState(() => _currentIndex = 0);
+          return;
+        }
+        
+        // 2. JIKA SUDAH DI FEED SCREEN → SHOW EXIT DIALOG
+        print('🚪 Exit dialog from Feed Screen');
+        final shouldExit = await showExitConfirmationDialog(context);
+        if (shouldExit) {
+          // Keluar dari aplikasi
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: screens[_currentIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Discover',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today),
+              label: 'Book',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }

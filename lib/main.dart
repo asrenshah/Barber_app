@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
-import 'screens/auth/splash_screen.dart'; // ✅ TAMBAH INI SAHAJA
+import 'screens/auth/splash_screen.dart';
 import 'screens/auth/profile_selector.dart';
 import 'screens/owner/owner_app.dart';
 import 'screens/customer/customer_app.dart';
@@ -16,26 +17,62 @@ void main() async {
   );
 
   print('🚀 Apps started - Premium Splash Screen');
-  runApp(const MyApp());
+  
+  final prefs = await SharedPreferences.getInstance();
+  final isDarkMode = prefs.getBool('dark_mode') ?? false;
+  
+  runApp(MyApp(isDarkMode: isDarkMode));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final bool isDarkMode;
+  
+  const MyApp({super.key, required this.isDarkMode});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _isDarkMode = false;
+  late SharedPreferences _prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _isDarkMode = widget.isDarkMode;
+    _initPreferences();
+  }
+
+  Future<void> _initPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
+    _startThemeListener();
+  }
+
+  void _startThemeListener() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        final currentDarkMode = _prefs.getBool('dark_mode') ?? false;
+        if (currentDarkMode != _isDarkMode) {
+          setState(() {
+            _isDarkMode = currentDarkMode;
+          });
+        }
+        _startThemeListener();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'StyleCutz',
-      theme: AppTheme.lightTheme,
+      theme: _isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(), // ✅ UBAH INI SAHAJA: AuthWrapper → SplashScreen
+      home: const SplashScreen(),
     );
   }
 }
-
-// ======================================================
-//  ✅ FIXED AUTH WRAPPER — CACHE ROLE, NO MORE MISMATCH
-// ======================================================
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -49,7 +86,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool _loadingRole = false;
 
   Future<void> _loadRole(User user) async {
-    if (_cachedRole != null || _loadingRole) return; // 🔥 prevent multiple loads
+    if (_cachedRole != null || _loadingRole) return;
     _loadingRole = true;
 
     try {
@@ -82,11 +119,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         if (user == null) {
-          _cachedRole = null; // reset role bila user logout
+          _cachedRole = null;
           return const ProfileSelector();
         }
 
-        // 🔥 Load role sekali sahaja selepas login
         _loadRole(user);
 
         if (_cachedRole == null) {

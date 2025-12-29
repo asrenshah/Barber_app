@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../../../main.dart';
 import 'email_password_form.dart';
 import 'social_login_buttons.dart';
 import '../register_email_screen.dart';
 import 'forgot_password_screen.dart';
 import '../profile_selector.dart';
 import '../../shared/universal_profile_form.dart';
-import '../../owner/owner_dashboard.dart';
 import '../../owner/owner_app.dart';
 import '../../customer/customer_app.dart';
 

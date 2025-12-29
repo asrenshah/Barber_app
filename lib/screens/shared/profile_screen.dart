@@ -59,7 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     // ✅ Check jika LoginScreen adalah class atau function
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => LoginScreen(userType: 'customer')), // ✅ Gunakan class LoginScreen
+      MaterialPageRoute(builder: (_) => const LoginScreen(userType: 'customer')), // ✅ Gunakan class LoginScreen
       (route) => false,
     );
   }
@@ -70,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (user == null) {
       // ✅ Gunakan class LoginScreen
-      return LoginScreen(userType: 'customer');
+      return const LoginScreen(userType: 'customer');
     }
 
     return Scaffold(

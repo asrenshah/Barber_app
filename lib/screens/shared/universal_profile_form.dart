@@ -1,12 +1,13 @@
-// lib/screens/shared/universal_profile_form.dart
+// lib/screens/shared/universal_profile_form.dart - SYNC WITH OWNER PROFILE
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'location_picker_screen.dart'; // ✅ PATH DIBETULKAN
 import 'dart:async';
-import '../owner/owner_dashboard.dart'; // ✅ PATH DIBETULKAN
-import '../customer/customer_profile_screen.dart'; // ✅ PATH DIBETULKAN
-import '../customer/customer_app.dart'; // 🆕 IMPORT BARU
+
+// Import screens - PATHS FIXED
+import 'location_picker_screen.dart';
+import '../owner/owner_dashboard.dart';
+import '../customer/customer_app.dart';
 
 class UniversalProfileForm extends StatefulWidget {
   final String mode; // 'create', 'edit', 'google-first-time'
@@ -32,17 +33,15 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _shopNameController = TextEditingController();
-  final TextEditingController _shopAddressController = TextEditingController();
-  final TextEditingController _shopCategoryController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController(); // ⬅️ NAME CHANGED: shopAddress → location
+  final TextEditingController _categoryController = TextEditingController(); // ⬅️ NAME CHANGED: shopCategory → category
   
   bool _loading = false;
   bool _isOwner = false;
   
-  // ✅ AUTO-SAVE TAMBAHAN
+  // AUTO-SAVE SYSTEM
   bool _autoSaving = false;
   Timer? _autoSaveTimer;
-
-  // ✅ TRACK IF USER HAS STARTED TYPING
   bool _hasUserTyped = false;
 
   @override
@@ -51,20 +50,18 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
     _isOwner = widget.userType.toLowerCase().contains('owner') || 
                 widget.userType.toLowerCase().contains('shop');
     
-    // Auto-fill data jika ada
+    // AUTO-FILL DATA DARI INITIALDATA (SYNC DENGAN OWNER PROFILE)
     if (widget.initialData != null) {
       _nameController.text = widget.initialData?['name'] ?? '';
       _usernameController.text = widget.initialData?['username'] ?? '';
       _emailController.text = widget.initialData?['email'] ?? '';
       _phoneController.text = widget.initialData?['phone'] ?? '';
-      _shopNameController.text = widget.initialData?['shopName'] ?? '';
-      _shopAddressController.text = widget.initialData?['location'] ?? 
-                                   widget.initialData?['shopAddress'] ?? '';
-      _shopCategoryController.text = widget.initialData?['category'] ?? 
-                                    widget.initialData?['shopCategory'] ?? 'walk-in';
+      _shopNameController.text = widget.initialData?['shopName'] ?? widget.initialData?['name'] ?? '';
+      _locationController.text = widget.initialData?['location'] ?? widget.initialData?['shopAddress'] ?? ''; // ⬅️ SYNC FIELD
+      _categoryController.text = widget.initialData?['category'] ?? widget.initialData?['shopCategory'] ?? 'walk-in'; // ⬅️ SYNC FIELD
     }
     
-    // Auto-fill email dari Google user
+    // AUTO-FILL EMAIL DARI GOOGLE USER
     if (widget.mode == 'google-first-time') {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && user.email != null) {
@@ -73,20 +70,17 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
       }
     }
     
-    // ✅ AUTO-SAVE: Setup listeners
+    // SETUP AUTO-SAVE LISTENERS
     _setupAutoSaveListeners();
-
-    // ✅ CHECK IF THERE'S EXISTING DATA (partial data)
     _checkExistingData();
   }
 
-  // ✅ CHECK IF THERE'S ANY EXISTING DATA
   void _checkExistingData() {
     final hasExistingData = _nameController.text.isNotEmpty ||
                            _usernameController.text.isNotEmpty ||
                            _phoneController.text.isNotEmpty ||
                            _shopNameController.text.isNotEmpty ||
-                           _shopAddressController.text.isNotEmpty;
+                           _locationController.text.isNotEmpty;
     
     if (hasExistingData) {
       _hasUserTyped = true;
@@ -95,21 +89,18 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
 
   @override
   void dispose() {
-    // ✅ AUTO-SAVE: Cancel timer
     _autoSaveTimer?.cancel();
-    
     _nameController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _shopNameController.dispose();
-    _shopAddressController.dispose();
-    _shopCategoryController.dispose();
+    _locationController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
 
-  // ✅ AUTO-SAVE: Setup listeners untuk semua controllers
   void _setupAutoSaveListeners() {
     _nameController.addListener(() {
       _hasUserTyped = true;
@@ -131,35 +122,33 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
       _hasUserTyped = true;
       _scheduleAutoSave();
     });
-    _shopAddressController.addListener(() {
+    _locationController.addListener(() {
       _hasUserTyped = true;
       _scheduleAutoSave();
     });
-    _shopCategoryController.addListener(() {
+    _categoryController.addListener(() {
       _hasUserTyped = true;
       _scheduleAutoSave();
     });
   }
 
-  // ✅ AUTO-SAVE: Schedule save selepas 2 saat
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(const Duration(seconds: 2), _performAutoSave);
   }
 
-  // ✅ AUTO-SAVE: Save data ke Firestore
+  // ⬅️ AUTO-SAVE: SYNC DENGAN OWNER PROFILE STRUCTURE
   Future<void> _performAutoSave() async {
     if (_autoSaving) return;
     
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // Check jika ada data dalam mana-mana field
     final hasData = _nameController.text.isNotEmpty ||
                     _usernameController.text.isNotEmpty ||
                     _phoneController.text.isNotEmpty ||
                     _shopNameController.text.isNotEmpty ||
-                    _shopAddressController.text.isNotEmpty;
+                    _locationController.text.isNotEmpty;
 
     if (!hasData) return;
 
@@ -175,12 +164,22 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
+      // ⬅️ SYNC KEY: 'location' dan 'category' (SAMA DENGAN OWNER PROFILE)
       if (_isOwner) {
         userData.addAll({
           'shopName': _shopNameController.text.trim(),
-          'shopAddress': _shopAddressController.text.trim(),
-          'category': _shopCategoryController.text.trim(),
+          'location': _locationController.text.trim(), // ✅ SYNC KEY
+          'category': _categoryController.text.trim(), // ✅ SYNC KEY
         });
+
+        // ⬅️ SAVE KE SHOPS COLLECTION (SAMA STRUCTURE DENGAN OWNER PROFILE)
+        await FirebaseFirestore.instance.collection('shops').doc(user.uid).set({
+          'name': _shopNameController.text.trim(),
+          'location': _locationController.text.trim(), // ✅ SYNC KEY
+          'category': _categoryController.text.trim(), // ✅ SYNC KEY
+          'phone': _phoneController.text.trim(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       }
 
       await FirebaseFirestore.instance
@@ -188,7 +187,7 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
           .doc(user.uid)
           .set(userData, SetOptions(merge: true));
 
-      print('✅ AUTO-SAVE BERJAYA: Data separuh disimpan');
+      print('✅ AUTO-SAVE BERJAYA: Data sync dengan owner profile');
 
     } catch (e) {
       print('❌ AUTO-SAVE ERROR: $e');
@@ -197,9 +196,7 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
     }
   }
 
-  // ✅ SMART BACK BUTTON HANDLING
   Future<bool> _onWillPop() async {
-    // ✅ JIKA USER SUDAH MULA TYPE (ada data separuh) → PERGI KE PROFILE
     if (_hasUserTyped) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -208,12 +205,12 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
         
         if (userRole == 'owner') {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => OwnerDashboard()),
+            MaterialPageRoute(builder: (_) => const OwnerDashboard()),
             (route) => false,
           );
         } else {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const CustomerProfileScreen()),
+            MaterialPageRoute(builder: (_) => const CustomerApp()),
             (route) => false,
           );
         }
@@ -221,9 +218,8 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
       return false;
     }
     
-    // ✅ JIKA BORANG MASIH KOSONG → PERGI KE CUSTOMER APP
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const CustomerApp()), // ✅ FIXED: GANTI HomeScaffold
+      MaterialPageRoute(builder: (_) => const CustomerApp()),
       (route) => false,
     );
     return false;
@@ -237,12 +233,13 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
     
     if (result != null) {
       setState(() {
-        _shopAddressController.text = result['address'];
-        _hasUserTyped = true; // ✅ MARK AS USER HAS TYPED
+        _locationController.text = result['address']; // ⬅️ SYNC FIELD
+        _hasUserTyped = true;
       });
     }
   }
 
+  // ⬅️ SAVE PROFILE: SYNC DENGAN OWNER PROFILE
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -263,17 +260,19 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
+      // ⬅️ SYNC DENGAN OWNER PROFILE STRUCTURE
       if (_isOwner) {
         userData.addAll({
           'shopName': _shopNameController.text.trim(),
-          'shopAddress': _shopAddressController.text.trim(),
-          'category': _shopCategoryController.text.trim(),
+          'location': _locationController.text.trim(), // ✅ SYNC KEY
+          'category': _categoryController.text.trim(), // ✅ SYNC KEY
         });
         
+        // ⬅️ SAVE KE SHOPS COLLECTION (SAMA STRUCTURE)
         await FirebaseFirestore.instance.collection('shops').doc(user?.uid).set({
           'name': _shopNameController.text.trim(),
-          'location': _shopAddressController.text.trim(),
-          'category': _shopCategoryController.text.trim(),
+          'location': _locationController.text.trim(), // ✅ SYNC KEY
+          'category': _categoryController.text.trim(), // ✅ SYNC KEY
           'phone': _phoneController.text.trim(),
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
@@ -305,15 +304,15 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
         ),
       );
       
-      // ✅ AFTER SAVE, REDIRECT BASED ON ROLE
+      // REDIRECT BASED ON ROLE
       if (_isOwner) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => OwnerDashboard()),
+          MaterialPageRoute(builder: (_) => const OwnerDashboard()),
           (route) => false,
         );
       } else {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const CustomerApp()), // ✅ FIXED: GANTI CustomerProfileScreen
+          MaterialPageRoute(builder: (_) => const CustomerApp()),
           (route) => false,
         );
       }
@@ -335,7 +334,6 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      // ✅ SMART BACK BUTTON HANDLING
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
@@ -346,14 +344,13 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              _onWillPop(); // ✅ HANDLE BACK BUTTON TAP
+              _onWillPop();
             },
           ),
-          // ✅ AUTO-SAVE: Tunjuk indicator
           actions: [
             if (_autoSaving)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
+              const Padding(
+                padding: EdgeInsets.all(8.0),
                 child: SizedBox(
                   width: 20,
                   height: 20,
@@ -371,7 +368,6 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
             key: _formKey,
             child: ListView(
               children: [
-                // ✅ AUTO-SAVE: Notice untuk user
                 if (widget.mode == 'create' || widget.mode == 'google-first-time')
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -494,7 +490,7 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
                 if (_isOwner) ...[
                   const SizedBox(height: 20),
                   const Text(
-                    'Maklumat Kedai',
+                    'Maklumat Kedai (Sync dengan Owner Profile)',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -518,7 +514,7 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          controller: _shopAddressController,
+                          controller: _locationController, // ⬅️ SYNC FIELD
                           decoration: const InputDecoration(
                             labelText: 'Alamat Kedai',
                             border: OutlineInputBorder(),
@@ -543,18 +539,18 @@ class _UniversalProfileFormState extends State<UniversalProfileForm> {
                   const SizedBox(height: 12),
                   
                   DropdownButtonFormField<String>(
-                    value: _shopCategoryController.text.isEmpty 
+                    initialValue: _categoryController.text.isEmpty 
                         ? 'walk-in' 
-                        : _shopCategoryController.text,
+                        : _categoryController.text,
                     items: const [
-                      DropdownMenuItem(value: 'walk-in', child: Text('Walk-in Sahaja')),
-                      DropdownMenuItem(value: 'walk-in+booking', child: Text('Walk-in + Booking')),
+                      DropdownMenuItem(value: 'walk-in', child: Text('Walk-in sahaja')),
+                      DropdownMenuItem(value: 'walk-in+booking', child: Text('Walk-in + booking luar')),
                       DropdownMenuItem(value: 'freelancer', child: Text('Freelancer')),
                     ],
                     onChanged: (value) {
                       setState(() {
-                        _shopCategoryController.text = value ?? 'walk-in';
-                        _hasUserTyped = true; // ✅ MARK AS USER HAS TYPED
+                        _categoryController.text = value ?? 'walk-in';
+                        _hasUserTyped = true;
                       });
                     },
                     decoration: const InputDecoration(

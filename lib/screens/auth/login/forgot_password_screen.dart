@@ -113,7 +113,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(Icons.check_circle, size: 80, color: Colors.green),
+        const Icon(Icons.check_circle, size: 80, color: Colors.green),
         const SizedBox(height: 20),
         
         const Text(

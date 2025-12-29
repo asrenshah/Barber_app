@@ -1,13 +1,13 @@
-// lib/screens/owner/owner_services_manager.dart
+// lib/screens/owner/owner_staff_manager.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class OwnerServicesManager {
+class OwnerStaffManager {
   final User? user;
   final FirebaseFirestore db;
   
-  OwnerServicesManager({
+  OwnerStaffManager({
     required this.user,
     required this.db,
   });

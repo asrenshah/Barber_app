@@ -1,35 +1,17 @@
 import 'package:flutter/material.dart';
 import 'login/login_screen.dart';
+import '../shared/exit_confirmation_dialog.dart';
 
 class ProfileSelector extends StatelessWidget {
   const ProfileSelector({super.key});
 
-  Future<bool> _onWillPop(BuildContext context) async {
-    final shouldExit = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Keluar Aplikasi'),
-        content: const Text('Adakah anda pasti ingin keluar?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Tidak'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Ya, Keluar'),
-          ),
-        ],
-      ),
-    );
-    
-    return shouldExit ?? false;
-  }
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () => _onWillPop(context),
+      onWillPop: () async {
+        final shouldExit = await showExitConfirmationDialog(context);
+        return shouldExit;
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('StyleCutz'),

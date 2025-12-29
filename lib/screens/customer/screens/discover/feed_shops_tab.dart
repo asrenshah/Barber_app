@@ -131,7 +131,7 @@ class FeedShopsTab extends StatelessWidget {
                             // Rating
                             Row(
                               children: [
-                                Icon(Icons.star, size: 12, color: Colors.amber),
+                                const Icon(Icons.star, size: 12, color: Colors.amber),
                                 const SizedBox(width: 2),
                                 Text(
                                   rating.toString(),
