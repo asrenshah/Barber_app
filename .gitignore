@@ -62,4 +62,7 @@ app.*.map.json
 # Log files containing sensitive data
 error_log.txt
 *.log
-begini?
+begini?android/app/*.json 
+android/app/*.json 
+/android/app/*.json 
+android/app/**/*.json 
